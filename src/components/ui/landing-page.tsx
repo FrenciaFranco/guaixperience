@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"; 
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import Globe from "@/components/ui/globe";
 import { cn } from "@/lib/utils";
 
@@ -28,23 +28,28 @@ interface ScrollGlobeProps {
 
 const defaultGlobeConfig = {
   positions: [
-    { top: "50%", left: "75%", scale: 1.4 },  // Hero: Right side, balanced
-    { top: "25%", left: "50%", scale: 0.9 },  // Innovation: Top side, subtle
-    { top: "15%", left: "90%", scale: 2 },  // Discovery: Left side, medium
-    { top: "50%", left: "50%", scale: 1.8 },  // Future: Center, large backdrop
+    { top: "36%", left: "40%", scale: 1.1 },
+    { top: "33%", left: "42%", scale: 1.04 },
+    { top: "39%", left: "38%", scale: 1.12 },
+    { top: "35%", left: "43%", scale: 1.02 },
   ]
 };
 
 // Parse percentage string to number
 const parsePercent = (str: string): number => parseFloat(str.replace('%', ''));
 
+// Lerp utility for smooth interpolation
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
 function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: ScrollGlobeProps) {
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [globeTransform, setGlobeTransform] = useState("");
+  const [scissorsAngle, setScissorsAngle] = useState(-24);
   const containerRef = useRef<HTMLDivElement>(null);
+  const globeRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
-  const animationFrameId = useRef<number>(undefined);
+  const animationFrameId = useRef<number | null>(null);
+  const currentStyle = useRef({ top: 36, left: 40, scale: 1.1 });
   
   // Pre-calculate positions for performance
   const calculatedPositions = useMemo(() => {
@@ -55,72 +60,85 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
     }));
   }, [globeConfig.positions]);
 
-  // Simple, direct scroll tracking
-  const updateScrollPosition = useCallback(() => {
-    const scrollTop = window.pageYOffset;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = Math.min(Math.max(scrollTop / docHeight, 0), 1);
-    
-    setScrollProgress(progress);
-
-    // Simple section detection
-    const viewportCenter = window.innerHeight / 2;
-    let newActiveSection = 0;
-    let minDistance = Infinity;
-
-    sectionRefs.current.forEach((ref, index) => {
-      if (ref) {
-        const rect = ref.getBoundingClientRect();
-        const sectionCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(sectionCenter - viewportCenter);
-        
-        if (distance < minDistance) {
-          minDistance = distance;
-          newActiveSection = index;
-        }
-      }
-    });
-
-    // Direct position update - no interpolation
-    const currentPos = calculatedPositions[newActiveSection];
-    const transform = `translate3d(${currentPos.left}vw, ${currentPos.top}vh, 0) translate3d(-50%, -50%, 0) scale3d(${currentPos.scale}, ${currentPos.scale}, 1)`;
-    
-    setGlobeTransform(transform);
-
-    setActiveSection(newActiveSection);
-  }, [calculatedPositions]);
-
-  // Throttled scroll handler with RAF
+  // Smooth animation loop
   useEffect(() => {
-    let ticking = false;
-    
-    const handleScroll = () => {
-      if (!ticking) {
-        animationFrameId.current = requestAnimationFrame(() => {
-          updateScrollPosition();
-          ticking = false;
-        });
-        ticking = true;
+    let targetStyle = calculatedPositions[0];
+    let targetOpacity = 0.85;
+    let targetAngle = -24;
+    let running = true;
+    let lastActiveSection = -1;
+
+    const updateTarget = () => {
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      const containerHeight = containerRect?.height ?? document.documentElement.scrollHeight;
+      const totalScrollable = Math.max(containerHeight - window.innerHeight, 1);
+      const containerTop = containerRect?.top ?? 0;
+      const currentScroll = Math.min(Math.max(-containerTop, 0), totalScrollable);
+      const progress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+
+      setScrollProgress(progress);
+
+      const maxIndex = calculatedPositions.length - 1;
+      const sectionProgress = progress * maxIndex;
+      const fromIndex = Math.floor(sectionProgress);
+      const toIndex = Math.min(fromIndex + 1, maxIndex);
+      const blend = sectionProgress - fromIndex;
+
+      const from = calculatedPositions[fromIndex];
+      const to = calculatedPositions[toIndex];
+
+      targetStyle = {
+        top: lerp(from.top, to.top, blend),
+        left: lerp(from.left, to.left, blend),
+        scale: lerp(from.scale, to.scale, blend),
+      };
+
+      const fromAngle = fromIndex % 2 === 0 ? -24 : 24;
+      const toAngle = toIndex % 2 === 0 ? -24 : 24;
+      const swingDirection = toAngle >= fromAngle ? 1 : -1;
+      const swing = Math.sin(blend * Math.PI) * 8 * swingDirection;
+      targetAngle = lerp(fromAngle, toAngle, blend) + swing;
+      setScissorsAngle((prev) => (Math.abs(prev - targetAngle) > 0.1 ? targetAngle : prev));
+
+      targetOpacity = progress > 0.75
+        ? lerp(0.85, 0.4, (progress - 0.75) / 0.25)
+        : 0.85;
+
+      const nextActiveSection = Math.round(sectionProgress);
+      if (nextActiveSection !== lastActiveSection) {
+        lastActiveSection = nextActiveSection;
+        setActiveSection(nextActiveSection);
       }
     };
 
-    // Use passive listeners and immediate execution
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    updateScrollPosition(); // Initial call
-    
+    const animate = () => {
+      if (!running) return;
+      const smoothing = 0.06;
+      currentStyle.current = {
+        top: lerp(currentStyle.current.top, targetStyle.top, smoothing),
+        left: lerp(currentStyle.current.left, targetStyle.left, smoothing),
+        scale: lerp(currentStyle.current.scale, targetStyle.scale, smoothing),
+      };
+
+      if (globeRef.current) {
+        globeRef.current.style.transform = `translate(${currentStyle.current.left - 50}vw, ${currentStyle.current.top - 50}vh) scale(${currentStyle.current.scale})`;
+        globeRef.current.style.opacity = `${targetOpacity}`;
+      }
+
+      animationFrameId.current = requestAnimationFrame(animate);
+    };
+
+    window.addEventListener("scroll", updateTarget, { passive: true });
+    updateTarget();
+    animate();
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (animationFrameId.current) {
+      running = false;
+      if (animationFrameId.current !== null) {
         cancelAnimationFrame(animationFrameId.current);
       }
+      window.removeEventListener("scroll", updateTarget);
     };
-  }, [updateScrollPosition]);
-
-  // Initial globe position
-  useEffect(() => {
-    const initialPos = calculatedPositions[0];
-    const initialTransform = `translate3d(${initialPos.left}vw, ${initialPos.top}vh, 0) translate3d(-50%, -50%, 0) scale3d(${initialPos.scale}, ${initialPos.scale}, 1)`;
-    setGlobeTransform(initialTransform);
   }, [calculatedPositions]);
 
   return (
@@ -190,17 +208,13 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
         <div className="absolute left-1/2 top-0 bottom-0 w-0.5 lg:w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent -translate-x-1/2 -z-10" />
       </div>
 
-      {/* Ultra-smooth Globe with responsive scaling */}
+      {/* Ultra-smooth scissors with full-viewport canvas */}
       <div
-        className="fixed z-10 pointer-events-none will-change-transform transition-all duration-[1400ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-        style={{
-          transform: globeTransform,
-          filter: `opacity(${activeSection === 3 ? 0.4 : 0.85})`,
-        }}
+        ref={globeRef}
+        className="fixed -top-[25vh] -bottom-[25vh] -left-[25vw] -right-[25vw] z-10 pointer-events-none overflow-visible will-change-transform"
+        style={{ opacity: 0.85 }}
       >
-        <div className="scale-75 sm:scale-90 lg:scale-100">
-          <Globe />
-        </div>
+        <Globe className="w-full h-full" angle={scissorsAngle} />
       </div>
 
       {/* Dynamic sections - fully responsive */}
