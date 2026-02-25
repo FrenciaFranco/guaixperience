@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Globe from "@/components/ui/globe";
+import { CircularTestimonials } from "@/components/ui/circular-testimonials";
+import { TESTIMONIALS_BY_LANGUAGE, type TestimonialItem } from "@/data/testimonials";
 import { cn } from "@/lib/utils";
 import guaiLogo from "../../../images/ChatGPT Image 24 feb 2026, 11_05_08 p.m..png";
 
@@ -32,7 +34,21 @@ interface ScrollGlobeProps {
       href: string;
       external?: boolean;
     }[];
+    testimonials?: {
+      quote: string;
+      name: string;
+      designation: string;
+      src: string;
+    }[];
   }[];
+  uiText: {
+    openInMaps: string;
+    contactTitle: string;
+    openAction: string;
+    sensoryLabel: string;
+    scrollLabel: string;
+    goToSection: string;
+  };
   className?: string;
 }
 
@@ -44,12 +60,30 @@ const getResponsiveScissorsStyle = (width: number) => {
     return { top: 38, left: 47, scale: 1.42 };
   }
   if (width < 1024) {
-    return { top: 37, left: 45, scale: 1.3 };
+    return { top: 38, left: 47, scale: 1.42 };
   }
-  if (width < 1440) {
-    return { top: 36, left: 42, scale: 1.18 };
-  }
-  return { top: 35, left: 40, scale: 1.08 };
+  // Desktop: no CSS scale needed — model is scaled in Three.js
+  return { top: 50, left: 80, scale: 1 };
+};
+
+type TestimonialsByLanguage = Record<"en" | "es" | "ca", TestimonialItem[]>;
+
+const isTestimonialItem = (value: unknown): value is TestimonialItem => {
+  if (typeof value !== "object" || value === null) return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.quote === "string" &&
+    typeof item.name === "string" &&
+    typeof item.designation === "string" &&
+    typeof item.src === "string"
+  );
+};
+
+const isTestimonialsByLanguage = (value: unknown): value is TestimonialsByLanguage => {
+  if (typeof value !== "object" || value === null) return false;
+  const data = value as Record<string, unknown>;
+  const keys: Array<keyof TestimonialsByLanguage> = ["en", "es", "ca"];
+  return keys.every((key) => Array.isArray(data[key]) && data[key].every(isTestimonialItem));
 };
 
 const contactIconClassName = "h-5 w-5 text-primary";
@@ -81,7 +115,15 @@ function ContactActionIcon({ id }: { id: "whatsapp" | "call" | "instagram" }) {
   );
 }
 
-function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
+function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
+  const resolvedUiText = uiText ?? {
+    openInMaps: "Open in Maps",
+    contactTitle: "Contact",
+    openAction: "Open",
+    sensoryLabel: "Sensory Barbershop",
+    scrollLabel: "Scroll to Discover",
+    goToSection: "Go to",
+  };
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [scissorsAngle, setScissorsAngle] = useState(-24);
@@ -89,8 +131,10 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
   const globeRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const animationFrameId = useRef<number | null>(null);
-  const currentStyle = useRef({ top: 36, left: 40, scale: 1.1 });
-  const responsiveBaseStyle = useRef({ top: 36, left: 42, scale: 1.18 });
+  const currentStyle = useRef({ top: 38, left: 47, scale: 1.42 });
+  const responsiveBaseStyle = useRef({ top: 38, left: 47, scale: 1.42 });
+  const scrollProgressRef = useRef(0);
+  const scissorsAngleRef = useRef(-24);
 
   useEffect(() => {
     const updateResponsiveStyle = () => {
@@ -123,7 +167,10 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
       const currentScroll = Math.min(Math.max(-containerTop, 0), totalScrollable);
       const progress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      setScrollProgress(progress);
+      if (Math.abs(progress - scrollProgressRef.current) > 0.012) {
+        scrollProgressRef.current = progress;
+        setScrollProgress(progress);
+      }
 
       const maxIndex = Math.max(sections.length - 1, 1);
       const sectionProgress = progress * maxIndex;
@@ -132,22 +179,40 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
       const blend = sectionProgress - fromIndex;
 
       const base = responsiveBaseStyle.current;
-      const bobY = Math.sin(progress * Math.PI * 2) * 1.2;
-      const bobX = Math.cos(progress * Math.PI * 2) * 0.9;
-      const pulse = Math.sin(progress * Math.PI) * 0.04;
+      const isDesktop = window.innerWidth >= 1024;
 
-      targetStyle = {
-        top: base.top + bobY,
-        left: base.left + bobX,
-        scale: base.scale + pulse,
-      };
+      if (isDesktop) {
+        // Desktop: scissors sits on one side per section, alternates on section change
+        const leftPos = 18;
+        const rightPos = 82;
+        const fromSide = fromIndex % 2 === 0 ? rightPos : leftPos;
+        const toSide = toIndex % 2 === 0 ? rightPos : leftPos;
+        const currentLeft = lerp(fromSide, toSide, blend);
+        targetStyle = {
+          top: base.top,
+          left: currentLeft,
+          scale: base.scale,
+        };
+      } else {
+        const bobY = Math.sin(progress * Math.PI * 2) * 1.2;
+        const bobX = Math.cos(progress * Math.PI * 2) * 0.9;
+        const pulse = Math.sin(progress * Math.PI) * 0.04;
+        targetStyle = {
+          top: base.top + bobY,
+          left: base.left + bobX,
+          scale: base.scale + pulse,
+        };
+      }
 
       const fromAngle = fromIndex % 2 === 0 ? -24 : 24;
       const toAngle = toIndex % 2 === 0 ? -24 : 24;
       const swingDirection = toAngle >= fromAngle ? 1 : -1;
       const swing = Math.sin(blend * Math.PI) * 8 * swingDirection;
       targetAngle = lerp(fromAngle, toAngle, blend) + swing;
-      setScissorsAngle((prev) => (Math.abs(prev - targetAngle) > 0.1 ? targetAngle : prev));
+      if (Math.abs(targetAngle - scissorsAngleRef.current) > 0.6) {
+        scissorsAngleRef.current = targetAngle;
+        setScissorsAngle(targetAngle);
+      }
 
       targetOpacity = progress > 0.75
         ? lerp(0.85, 0.4, (progress - 0.75) / 0.25)
@@ -234,6 +299,7 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
               </div>
 
               <button
+                type="button"
                 onClick={() => {
                   sectionRefs.current[index]?.scrollIntoView({ 
                     behavior: 'smooth',
@@ -241,13 +307,13 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                   });
                 }}
                 className={cn(
-                  "relative w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full border-2 transition-all duration-300 hover:scale-125",
+                  "relative w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full border-2 transition-all duration-300 hover:scale-125 cursor-pointer",
                   "before:absolute before:inset-0 before:rounded-full before:transition-all before:duration-300",
                   activeSection === index 
                     ? "bg-primary border-primary shadow-lg before:animate-ping before:bg-primary/20" 
                     : "bg-transparent border-muted-foreground/40 hover:border-primary/60 hover:bg-primary/10"
                 )}
-                aria-label={`Go to ${section.badge || `section ${index + 1}`}`}
+                aria-label={`${resolvedUiText.goToSection} ${section.badge || `section ${index + 1}`}`}
               />
             </div>
           ))}
@@ -260,7 +326,7 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
       {/* Ultra-smooth scissors with full-viewport canvas */}
       <div
         ref={globeRef}
-        className="fixed inset-0 z-10 pointer-events-none overflow-visible will-change-transform"
+        className="fixed inset-0 z-30 pointer-events-none overflow-visible will-change-transform"
         style={{ opacity: 0.85 }}
       >
         <Globe className="w-full h-full" angle={scissorsAngle} />
@@ -276,30 +342,28 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
           id={section.id}
           ref={(el) => { sectionRefs.current[index] = el; }}
           className={cn(
-            "relative min-h-screen flex flex-col justify-center px-4 sm:px-6 md:px-8 lg:px-12 z-20 py-12 sm:py-16 lg:py-20",
+            "relative flex flex-col justify-start px-4 sm:px-6 md:px-8 lg:px-12 z-20 py-8 sm:py-10 lg:py-12 min-h-[auto]",
             "w-full max-w-full overflow-hidden",
-            section.align === 'center' && "items-center text-center",
-            section.align === 'right' && "items-end text-right",
-            section.align !== 'center' && section.align !== 'right' && "items-start text-left"
+            "items-center text-center"
           )}
         >
           <div className={cn(
             "w-full max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl will-change-transform transition-all duration-700",
-            "rounded-2xl sm:rounded-3xl bg-white/[0.04] backdrop-blur-md px-5 sm:px-7 md:px-8 lg:px-10 py-6 sm:py-8 lg:py-10 shadow-[0_10px_30px_rgba(0,0,0,0.12)]",
+            "rounded-2xl sm:rounded-3xl bg-white/[0.04] backdrop-blur-md px-4 sm:px-7 md:px-8 lg:px-10 py-5 sm:py-6 lg:py-7 shadow-[0_10px_30px_rgba(0,0,0,0.12)]",
             "opacity-100 translate-y-0"
           )}>
             {index === 0 ? (
-              <div className="mb-6 sm:mb-8 flex justify-center">
+              <div className="mb-1 sm:mb-8 flex justify-center">
                 <Image
                   src={guaiLogo}
                   alt="GUAI XPERIENCE logo"
                   priority
-                  className="h-auto w-[170px] sm:w-[210px] lg:w-[240px] drop-shadow-[0_6px_16px_rgba(0,0,0,0.28)]"
+                  className="h-auto w-[340px] sm:w-[420px] lg:w-[480px] drop-shadow-[0_6px_16px_rgba(0,0,0,0.28)]"
                 />
               </div>
             ) : (
               <h1 className={cn(
-                "w-full text-center font-[family-name:var(--font-montserrat)] font-bold mb-6 sm:mb-8 leading-[1.1] tracking-tight text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)]",
+                "w-full text-center font-[family-name:var(--font-montserrat)] font-bold mb-6 sm:mb-6 leading-[1.1] tracking-tight text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)]",
                 "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl"
               )}>
                 {section.subtitle ? (
@@ -312,7 +376,33 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                 )}
               </h1>
             )}
-            {section.location && section.contactActions ? (
+            {section.testimonials ? (
+              <div className="flex justify-center">
+                <div className="w-full max-w-[1456px] rounded-2xl border border-border/55 bg-background/35 p-3 sm:p-6 lg:p-10 backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+                  {Math.abs(activeSection - index) <= 1 ? (
+                    <CircularTestimonials
+                      testimonials={section.testimonials}
+                      autoplay={true}
+                      colors={{
+                        name: "#f7f7ff",
+                        designation: "rgba(247,247,255,0.72)",
+                        testimony: "rgba(247,247,255,0.9)",
+                        arrowBackground: "rgba(10,14,28,0.75)",
+                        arrowForeground: "#f1f1f7",
+                        arrowHoverBackground: "#0582CA",
+                      }}
+                    fontSizes={{
+                      name: "clamp(1.65rem, 5.8vw, 1.95rem)",
+                      designation: "clamp(1rem, 3.9vw, 1.25rem)",
+                      quote: "clamp(1.08rem, 3.9vw, 1.25rem)",
+                    }}
+                  />
+                ) : (
+                    <div className="h-[420px] w-full rounded-2xl bg-black/10" />
+                  )}
+                </div>
+              </div>
+            ) : section.location && section.contactActions ? (
               <div className="space-y-6 sm:space-y-8">
                 <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
                   <div className="rounded-xl sm:rounded-2xl border border-border/55 bg-background/35 p-4 sm:p-5 backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
@@ -331,15 +421,15 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                       href={section.location.mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/35"
+                      className="mt-4 inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/35"
                       aria-label="Open GUAI XPERIENCE in Google Maps"
                     >
-                      Open in Maps
+                      {resolvedUiText.openInMaps}
                     </a>
                   </div>
 
                   <div className="rounded-xl sm:rounded-2xl border border-border/55 bg-background/35 p-4 sm:p-5 backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
-                    <h3 className="text-lg sm:text-xl font-semibold text-white">Contact</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-white">{resolvedUiText.contactTitle}</h3>
                     {section.contactIntro && (
                       <p className="mt-2 text-sm text-white/72">{section.contactIntro}</p>
                     )}
@@ -351,7 +441,7 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                           target={item.external ? "_blank" : undefined}
                           rel={item.external ? "noopener noreferrer" : undefined}
                           aria-label={`${item.label}: ${item.value}`}
-                          className="group flex min-h-14 items-center justify-between gap-3 rounded-lg border border-border/50 bg-card/45 px-3.5 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          className="group flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-lg border border-border/50 bg-card/45 px-3.5 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
                         >
                           <div className="flex min-w-0 items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-md border border-primary/35 bg-primary/10">
@@ -363,7 +453,7 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                             </div>
                           </div>
                           <span className="text-xs font-medium uppercase tracking-[0.12em] text-primary/90 transition-colors group-hover:text-primary">
-                            Open
+                            {resolvedUiText.openAction}
                           </span>
                         </a>
                       ))}
@@ -373,7 +463,7 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
               </div>
             ) : (
               <div className={cn(
-                "font-[family-name:var(--font-inter)] text-white/92 leading-relaxed mb-8 sm:mb-10 text-base sm:text-lg lg:text-xl font-light drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]",
+                "font-[family-name:var(--font-inter)] text-white/92 leading-[1.45] sm:leading-relaxed mb-5 sm:mb-10 text-[15px] sm:text-lg lg:text-xl font-light drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]",
                 section.align === 'center' ? "max-w-full mx-auto text-center" : "max-w-full"
               )}>
                 <p className="mb-3 sm:mb-4 whitespace-pre-line">{section.description}</p>
@@ -381,11 +471,11 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                   <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground/60 mt-4 sm:mt-6">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                      <span>Sensory Barbershop</span>
+                      <span>{resolvedUiText.sensoryLabel}</span>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <div className="w-1 h-1 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.5s' }} />
-                      <span>Scroll to Discover</span>
+                      <span>{resolvedUiText.scrollLabel}</span>
                     </div>
                   </div>
                 )}
@@ -394,21 +484,21 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
 
             {/* Enhanced Features - Responsive grid */}
             {section.features && (
-              <div className="grid gap-3 sm:gap-4 mb-8 sm:mb-10">
+              <div className="grid gap-2.5 sm:gap-4 mb-5 sm:mb-10">
                 {section.features.map((feature, featureIndex) => (
                   <div 
                     key={feature.title}
                     className={cn(
-                      "group p-4 sm:p-5 lg:p-6 rounded-lg sm:rounded-xl border bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5",
+                      "group p-3 sm:p-5 lg:p-6 rounded-lg sm:rounded-xl border bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5",
                       "hover:border-primary/20 hover:-translate-y-1"
                     )}
                     style={{ animationDelay: `${featureIndex * 0.1}s` }}
                   >
-                    <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="flex items-start gap-2.5 sm:gap-4">
                       <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-primary/60 mt-1.5 sm:mt-2 group-hover:bg-primary transition-colors flex-shrink-0" />
                       <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
-                        <h3 className="font-semibold text-card-foreground text-base sm:text-lg">{feature.title}</h3>
-                        <p className="text-muted-foreground/80 leading-relaxed text-sm sm:text-base">{feature.description}</p>
+                        <h3 className="font-semibold text-card-foreground text-[1.03rem] sm:text-lg">{feature.title}</h3>
+                        <p className="text-muted-foreground/80 leading-[1.45] sm:leading-relaxed text-[0.97rem] sm:text-base">{feature.description}</p>
                       </div>
                     </div>
                   </div>
@@ -428,9 +518,10 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                   {section.actions.map((action, actionIndex) => (
                     <button
                       key={action.label}
+                      type="button"
                       onClick={action.onClick}
                       className={cn(
-                        "group relative px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base",
+                        "group relative cursor-pointer px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base",
                         "hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 w-full sm:w-auto",
                         action.variant === 'primary' 
                           ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30" 
@@ -440,7 +531,7 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
                     >
                       <span className="relative z-10">{action.label}</span>
                       {action.variant === 'primary' && (
-                        <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="pointer-events-none absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       )}
                     </button>
                   ))}
@@ -463,85 +554,304 @@ function ScrollGlobe({ sections, className }: ScrollGlobeProps) {
   );
 }
 
+type Language = "en" | "es" | "ca";
+
+const BOOKING_URL = "https://connect.shore.com/bookings/guai-xperience-70005040-06e6-4d38-9633-6d5187dc93d5/services?locale=es";
+
 // Demo component showcasing the ScrollGlobe
 export default function GlobeScrollDemo() {
-  const demoSections = [
+  const [language, setLanguage] = useState<Language>("en");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [testimonialsByLanguage, setTestimonialsByLanguage] = useState<TestimonialsByLanguage>(
+    TESTIMONIALS_BY_LANGUAGE
+  );
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadTestimonials = async () => {
+      try {
+        const response = await fetch("/testimonials/content.json", { cache: "no-store" });
+        if (!response.ok) return;
+        const data: unknown = await response.json();
+        if (mounted && isTestimonialsByLanguage(data)) {
+          setTestimonialsByLanguage(data);
+        }
+      } catch {
+        // Keep local fallback testimonials when JSON is not available.
+      }
+    };
+
+    loadTestimonials();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const baseSections: ScrollGlobeProps["sections"] = [
     {
       id: "hero",
       badge: "Welcome",
       title: "Welcome to GUAI XPERIENCE",
       description: "This is more than a haircut. It is a sensory barbershop ritual where style, self-care, and calm come together so you can slow down, reconnect, and leave renewed.",
-      align: "left" as const,
+      align: "left",
       actions: [
-        { label: "Book Now", variant: "primary" as const, onClick: () => window.open("https://connect.shore.com/bookings/guai-xperience-70005040-06e6-4d38-9633-6d5187dc93d5/services?locale=es", "_blank", "noopener,noreferrer") },
-        { label: "Learn More", variant: "secondary" as const, onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
-      ]
+        { label: "Book Now", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") },
+        { label: "Learn More", variant: "secondary", onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
+      ],
     },
     {
       id: "experience",
       badge: "Experience",
       title: "The GUAI Experience",
       description: "Every appointment is designed around you. We combine precise technique, thoughtful conversation, and a relaxing atmosphere inspired by natural textures, aromas, and rhythm.",
-      align: "left" as const,
+      align: "left",
       features: [
         { title: "Personalized Attention", description: "We tailor every cut, beard service, and finish to your style, routine, and personality." },
         { title: "Sensory Atmosphere", description: "Light, sound, and scent are curated to help you disconnect from the rush and feel present." },
-        { title: "Premium Grooming", description: "From consultation to final detail, our craft is precise, modern, and consistently high-end." }
-      ]
+        { title: "Premium Grooming", description: "From consultation to final detail, our craft is precise, modern, and consistently high-end." },
+      ],
     },
     {
       id: "visit",
       badge: "Contact",
       title: "Visit Us in Barcelona",
       description: "",
-      align: "left" as const,
+      align: "left",
       location: {
         title: "Find Us",
         address: "C. Llull 82, Barcelona",
         mapEmbedUrl: "https://www.google.com/maps?q=C.%20Llull%2082%2C%20Barcelona&output=embed",
-        mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona"
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona",
       },
       contactIntro: "Questions or bookings? Reach us directly.",
       contactActions: [
-        {
-          id: "whatsapp",
-          label: "WhatsApp",
-          value: "654 823 296",
-          href: "https://wa.me/34654823296",
-          external: true
-        },
-        {
-          id: "call",
-          label: "Call",
-          value: "931 286 182",
-          href: "tel:+34931286182"
-        },
-        {
-          id: "instagram",
-          label: "Instagram",
-          value: "@guaixperience",
-          href: "https://www.instagram.com/guaixperience",
-          external: true
-        }
-      ]
+        { id: "whatsapp", label: "WhatsApp", value: "654 823 296", href: "https://wa.me/34654823296", external: true },
+        { id: "call", label: "Call", value: "931 286 182", href: "tel:+34931286182" },
+        { id: "instagram", label: "Instagram", value: "@guaixperience", href: "https://www.instagram.com/guaixperience", external: true },
+      ],
     },
     {
       id: "booking",
       badge: "Booking",
       title: "Book Your Appointment",
       description: "Choose your service and reserve your spot online in just a few steps. Quick, clear, and ready when you are.",
-      align: "center" as const,
-      actions: [
-        { label: "Book Now", variant: "primary" as const, onClick: () => window.open("https://connect.shore.com/bookings/guai-xperience-70005040-06e6-4d38-9633-6d5187dc93d5/services?locale=es", "_blank", "noopener,noreferrer") }
-      ],
-      helperText: "Fast and secure online booking"
-    }
+      align: "center",
+      actions: [{ label: "Book Now", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") }],
+      helperText: "Fast and secure online booking",
+    },
+    {
+      id: "testimonials",
+      badge: "Testimonials",
+      title: "What Clients Say",
+      description: "",
+      align: "center",
+      testimonials: testimonialsByLanguage.en,
+    },
+  ];
+
+  const localizedSections: Record<Language, ScrollGlobeProps["sections"]> = {
+    en: baseSections,
+    es: [
+      {
+        ...baseSections[0],
+        badge: "Bienvenida",
+        title: "Bienvenido a GUAI XPERIENCE",
+        description: "Esto es mas que un corte. Es un ritual de barberia sensorial donde estilo, autocuidado y calma se unen para que bajes el ritmo, reconectes y salgas renovado.",
+        actions: [
+          { label: "Reservar", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") },
+          { label: "Saber mas", variant: "secondary", onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
+        ],
+      },
+      {
+        ...baseSections[1],
+        badge: "Experiencia",
+        title: "La Experiencia GUAI",
+        description: "Cada cita esta disenada alrededor de ti. Combinamos tecnica precisa, conversacion cuidada y un ambiente relajante inspirado en texturas, aromas y ritmo natural.",
+        features: [
+          { title: "Atencion personalizada", description: "Adaptamos cada corte, arreglo de barba y acabado a tu estilo, rutina y personalidad." },
+          { title: "Ambiente sensorial", description: "Luz, sonido y aroma se cuidan para ayudarte a desconectar del ritmo diario y estar presente." },
+          { title: "Grooming premium", description: "Desde la consulta hasta el ultimo detalle, nuestro trabajo es preciso, moderno y de alto nivel." },
+        ],
+      },
+      {
+        ...baseSections[2],
+        badge: "Contacto",
+        title: "Visitanos en Barcelona",
+        location: {
+          title: "Donde estamos",
+          address: "C. Llull 82, Barcelona",
+          mapEmbedUrl: "https://www.google.com/maps?q=C.%20Llull%2082%2C%20Barcelona&output=embed",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona",
+        },
+        contactIntro: "Dudas o reservas? Escribenos directamente.",
+        contactActions: [
+          { id: "whatsapp", label: "WhatsApp", value: "654 823 296", href: "https://wa.me/34654823296", external: true },
+          { id: "call", label: "Llamar", value: "931 286 182", href: "tel:+34931286182" },
+          { id: "instagram", label: "Instagram", value: "@guaixperience", href: "https://www.instagram.com/guaixperience", external: true },
+        ],
+      },
+      {
+        ...baseSections[3],
+        badge: "Reserva",
+        title: "Reserva tu cita",
+        description: "Elige tu servicio y reserva online en pocos pasos. Rapido, claro y listo cuando tu quieras.",
+        actions: [{ label: "Reservar ahora", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") }],
+        helperText: "Reserva online rapida y segura",
+      },
+      {
+        ...baseSections[4],
+        badge: "Resenas",
+        title: "Lo que dicen nuestros clientes",
+        testimonials: testimonialsByLanguage.es,
+      },
+    ],
+    ca: [
+      {
+        ...baseSections[0],
+        badge: "Benvinguda",
+        title: "Benvingut a GUAI XPERIENCE",
+        description: "Aixo es mes que un tall de cabell. Es un ritual de barberia sensorial on estil, autocura i calma s'uneixen perque puguis baixar el ritme, reconnectar i sortir renovat.",
+        actions: [
+          { label: "Reserva", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") },
+          { label: "Saber-ne mes", variant: "secondary", onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
+        ],
+      },
+      {
+        ...baseSections[1],
+        badge: "Experiencia",
+        title: "L'Experiencia GUAI",
+        description: "Cada cita esta dissenyada al teu voltant. Combinem tecnica precisa, conversa cuidada i una atmosfera relaxant inspirada en textures, aromes i ritme natural.",
+        features: [
+          { title: "Atencio personalitzada", description: "Adaptem cada tall, servei de barba i acabat al teu estil, rutina i personalitat." },
+          { title: "Atmosfera sensorial", description: "La llum, el so i l'aroma es cuiden per ajudar-te a desconnectar del ritme diari i estar present." },
+          { title: "Grooming premium", description: "Des de la consulta fins a l'ultim detall, el nostre treball es precis, modern i d'alt nivell." },
+        ],
+      },
+      {
+        ...baseSections[2],
+        badge: "Contacte",
+        title: "Visita'ns a Barcelona",
+        location: {
+          title: "On som",
+          address: "C. Llull 82, Barcelona",
+          mapEmbedUrl: "https://www.google.com/maps?q=C.%20Llull%2082%2C%20Barcelona&output=embed",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona",
+        },
+        contactIntro: "Dubtes o reserves? Escriu-nos directament.",
+        contactActions: [
+          { id: "whatsapp", label: "WhatsApp", value: "654 823 296", href: "https://wa.me/34654823296", external: true },
+          { id: "call", label: "Trucar", value: "931 286 182", href: "tel:+34931286182" },
+          { id: "instagram", label: "Instagram", value: "@guaixperience", href: "https://www.instagram.com/guaixperience", external: true },
+        ],
+      },
+      {
+        ...baseSections[3],
+        badge: "Reserva",
+        title: "Reserva la teva cita",
+        description: "Tria el teu servei i reserva online en pocs passos. Rapid, clar i preparat quan tu vulguis.",
+        actions: [{ label: "Reserva ara", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") }],
+        helperText: "Reserva online rapida i segura",
+      },
+      {
+        ...baseSections[4],
+        badge: "Ressenyes",
+        title: "Que diuen els clients",
+        testimonials: testimonialsByLanguage.ca,
+      },
+    ],
+  };
+
+  const uiByLanguage: Record<Language, ScrollGlobeProps["uiText"]> = {
+    en: {
+      openInMaps: "Open in Maps",
+      contactTitle: "Contact",
+      openAction: "Open",
+      sensoryLabel: "Sensory Barbershop",
+      scrollLabel: "Scroll to Discover",
+      goToSection: "Go to",
+    },
+    es: {
+      openInMaps: "Abrir en Maps",
+      contactTitle: "Contacto",
+      openAction: "Abrir",
+      sensoryLabel: "Barberia Sensorial",
+      scrollLabel: "Desliza para descubrir",
+      goToSection: "Ir a",
+    },
+    ca: {
+      openInMaps: "Obrir a Maps",
+      contactTitle: "Contacte",
+      openAction: "Obrir",
+      sensoryLabel: "Barberia Sensorial",
+      scrollLabel: "Desplaca per descobrir",
+      goToSection: "Ves a",
+    },
+  };
+
+  const languageOptions: { code: Language; label: string }[] = [
+    { code: "en", label: "English" },
+    { code: "es", label: "Castellano" },
+    { code: "ca", label: "Catalan" },
   ];
 
   return (
-    <ScrollGlobe 
-      sections={demoSections}
-      className="bg-gradient-to-br from-background via-muted/20 to-background"
-    />
+    <>
+      <ScrollGlobe
+        sections={localizedSections[language]}
+        uiText={uiByLanguage[language]}
+        className="bg-gradient-to-br from-background via-muted/20 to-background"
+      />
+
+      <div ref={menuRef} className="fixed bottom-4 left-4 z-[60]">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-border/60 bg-background/90 px-4 text-sm font-medium text-foreground shadow-lg backdrop-blur-md transition-colors hover:bg-background"
+            aria-label="Translate website"
+            aria-expanded={menuOpen}
+          >
+            <span aria-hidden="true">A</span>
+            <span>{languageOptions.find((option) => option.code === language)?.label}</span>
+          </button>
+
+          {menuOpen && (
+            <div className="absolute bottom-14 left-0 min-w-[170px] overflow-hidden rounded-xl border border-border/60 bg-background/95 shadow-xl backdrop-blur-md">
+              {languageOptions.map((option) => (
+                <button
+                  key={option.code}
+                  type="button"
+                  onClick={() => {
+                    setLanguage(option.code);
+                    setMenuOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center justify-between px-4 py-2.5 text-left text-sm transition-colors",
+                    option.code === language
+                      ? "bg-primary/15 text-primary"
+                      : "text-foreground hover:bg-accent/45"
+                  )}
+                >
+                  <span>{option.label}</span>
+                  {option.code === language && <span className="text-xs">Active</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

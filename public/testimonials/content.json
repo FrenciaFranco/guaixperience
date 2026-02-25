@@ -1,0 +1,62 @@
+{
+  "en": [
+    {
+      "quote": "Best fade I have had in Barcelona. Clean sides, natural blend on top, and they respected exactly the style I asked for.",
+      "name": "Marc Soler",
+      "designation": "Regular Client",
+      "src": "/testimonials/marc-soler.jpg"
+    },
+    {
+      "quote": "I came in with overgrown hair and left with a sharp modern cut that is easy to style every morning. Super professional team.",
+      "name": "Javier Ortega",
+      "designation": "Frequent Visitor",
+      "src": "/testimonials/javier-ortega.jpg"
+    },
+    {
+      "quote": "Perfect skin fade and beard line-up. They pay attention to head shape and details, so the cut lasts looking fresh for days.",
+      "name": "Pau Ferrer",
+      "designation": "Satisfied Client",
+      "src": "/testimonials/pau-ferrer.jpg"
+    }
+  ],
+  "es": [
+    {
+      "quote": "El mejor degradado que me han hecho en Barcelona. Laterales limpios, transicion natural arriba y justo el estilo que pedi.",
+      "name": "Marc Soler",
+      "designation": "Cliente",
+      "src": "/testimonials/marc-soler.jpg"
+    },
+    {
+      "quote": "Llegue con el pelo largo y sali con un corte moderno y facil de peinar cada manana. Equipo muy profesional y cercano.",
+      "name": "Javier Ortega",
+      "designation": "Cliente habitual",
+      "src": "/testimonials/javier-ortega.jpg"
+    },
+    {
+      "quote": "Skin fade perfecto y perfilado de barba impecable. Cuidan la forma de la cabeza y los detalles para que dure bien toda la semana.",
+      "name": "Pau Ferrer",
+      "designation": "Cliente satisfecho",
+      "src": "/testimonials/pau-ferrer.jpg"
+    }
+  ],
+  "ca": [
+    {
+      "quote": "El millor degradat que m'han fet a Barcelona. Laterals nets, transicio natural a dalt i exactament l'estil que vaig demanar.",
+      "name": "Marc Soler",
+      "designation": "Cliente",
+      "src": "/testimonials/marc-soler.jpg"
+    },
+    {
+      "quote": "Vaig arribar amb el cabell llarg i en vaig sortir amb un tall modern i facil de pentinar cada mati. Equip molt professional.",
+      "name": "Javier Ortega",
+      "designation": "Client habitual",
+      "src": "/testimonials/javier-ortega.jpg"
+    },
+    {
+      "quote": "Skin fade perfecte i barba perfilada amb molta precisio. Cuiden la forma del cap i els detalls perque el tall aguanti be dies.",
+      "name": "Pau Ferrer",
+      "designation": "Cliente satisfeto",
+      "src": "/testimonials/pau-ferrer.jpg"
+    }
+  ]
+}

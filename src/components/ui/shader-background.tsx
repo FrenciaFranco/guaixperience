@@ -208,14 +208,15 @@ const ShaderBackground = () => {
         canvas.width = window.innerHeight;
         canvas.height = window.innerWidth;
       } else {
+        const resFactor = 0.55;
         canvas.style.top = "0";
         canvas.style.left = "0";
         canvas.style.width = "100vw";
         canvas.style.height = "100vh";
         canvas.style.transform = "none";
         canvas.style.transformOrigin = "center";
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = Math.round(window.innerWidth * resFactor);
+        canvas.height = Math.round(window.innerHeight * resFactor);
       }
 
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -267,7 +268,11 @@ const ShaderBackground = () => {
   }, []);
 
   return (
-    <canvas ref={canvasRef} className="fixed top-0 left-0 h-full w-full -z-10" />
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none fixed top-0 left-0 h-full w-full -z-10"
+      aria-hidden="true"
+    />
   );
 };
 

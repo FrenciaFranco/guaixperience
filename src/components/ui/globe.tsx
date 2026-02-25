@@ -13,9 +13,10 @@ const goldMaterial = new THREE.MeshStandardMaterial({
 
 interface ScissorsModelProps {
   angle: number;
+  modelScale?: number;
 }
 
-function ScissorsModel({ angle }: ScissorsModelProps) {
+function ScissorsModel({ angle, modelScale = 0.8 }: ScissorsModelProps) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/barbers_scissors.glb");
   const { actions } = useAnimations(animations, group);
@@ -50,7 +51,7 @@ function ScissorsModel({ angle }: ScissorsModelProps) {
     <group ref={group}>
       <primitive
         object={scene}
-        scale={0.8}
+        scale={modelScale}
         position={[0, -1, 0]}
       />
     </group>
@@ -65,11 +66,11 @@ interface GlobeProps {
 }
 
 const Globe: React.FC<GlobeProps> = ({ className, angle = -24 }) => {
-  const [isLargeDesktop, setIsLargeDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     const updateSize = () => {
-      setIsLargeDesktop(window.innerWidth >= 1280);
+      setIsDesktop(window.innerWidth >= 1024);
     };
 
     updateSize();
@@ -78,20 +79,20 @@ const Globe: React.FC<GlobeProps> = ({ className, angle = -24 }) => {
   }, []);
 
   return (
-    <div className={className ?? "w-screen h-screen"}>
-      <div className="w-full h-full">
+    <div className={`${className ?? "w-screen h-screen"} pointer-events-none`}>
+      <div className="w-full h-full pointer-events-none">
         <Canvas
           camera={{ position: [0, 3, 16], fov: 45, near: 0.01, far: 200 }}
-          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-          dpr={isLargeDesktop ? [1, 1.1] : [1, 1.5]}
-          style={{ background: "transparent" }}
+          gl={{ antialias: !isDesktop, alpha: true, powerPreference: "high-performance" }}
+          dpr={isDesktop ? [0.6, 0.8] : [1, 1.5]}
+          style={{ background: "transparent", pointerEvents: "none" }}
         >
           <ambientLight intensity={0.4} />
           <directionalLight position={[5, 5, 5]} intensity={1.5} color="#fff5e0" />
           <directionalLight position={[-3, -2, -4]} intensity={0.5} color="#ffd700" />
           <pointLight position={[0, 4, 2]} intensity={1} color="#ffeaaa" />
           <Suspense fallback={null}>
-            <ScissorsModel angle={angle} />
+            <ScissorsModel angle={angle} modelScale={isDesktop ? 2.5 : 0.8} />
             <Environment preset="city" />
           </Suspense>
         </Canvas>
