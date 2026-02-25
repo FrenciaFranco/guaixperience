@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useRef, useEffect } from "react";
+import React, { Suspense, useRef, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations, Environment } from "@react-three/drei";
 import * as THREE from "three";
@@ -65,13 +65,25 @@ interface GlobeProps {
 }
 
 const Globe: React.FC<GlobeProps> = ({ className, angle = -24 }) => {
+  const [isLargeDesktop, setIsLargeDesktop] = useState(false);
+
+  useEffect(() => {
+    const updateSize = () => {
+      setIsLargeDesktop(window.innerWidth >= 1280);
+    };
+
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
   return (
     <div className={className ?? "w-screen h-screen"}>
       <div className="w-full h-full">
         <Canvas
           camera={{ position: [0, 3, 16], fov: 45, near: 0.01, far: 200 }}
-          gl={{ antialias: true, alpha: true }}
-          dpr={[1, 1.5]}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+          dpr={isLargeDesktop ? [1, 1.1] : [1, 1.5]}
           style={{ background: "transparent" }}
         >
           <ambientLight intensity={0.4} />
