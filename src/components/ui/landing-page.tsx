@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Globe from "@/components/ui/globe";
 import { CircularTestimonials } from "@/components/ui/circular-testimonials";
 import { TESTIMONIALS_BY_LANGUAGE, type TestimonialItem } from "@/data/testimonials";
 import { cn } from "@/lib/utils";
@@ -51,20 +50,6 @@ interface ScrollGlobeProps {
   };
   className?: string;
 }
-
-// Lerp utility for smooth interpolation
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-const getResponsiveScissorsStyle = (width: number) => {
-  if (width < 640) {
-    return { top: 38, left: 47, scale: 1.42 };
-  }
-  if (width < 1024) {
-    return { top: 38, left: 47, scale: 1.42 };
-  }
-  // Desktop: no CSS scale needed — model is scaled in Three.js
-  return { top: 50, left: 80, scale: 1 };
-};
 
 type TestimonialsByLanguage = Record<"en" | "es" | "ca", TestimonialItem[]>;
 
@@ -126,39 +111,11 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
   };
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [scissorsAngle, setScissorsAngle] = useState(-24);
   const containerRef = useRef<HTMLDivElement>(null);
-  const globeRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
-  const animationFrameId = useRef<number | null>(null);
-  const currentStyle = useRef({ top: 38, left: 47, scale: 1.42 });
-  const responsiveBaseStyle = useRef({ top: 38, left: 47, scale: 1.42 });
   const scrollProgressRef = useRef(0);
-  const scissorsAngleRef = useRef(-24);
 
   useEffect(() => {
-    const updateResponsiveStyle = () => {
-      const next = getResponsiveScissorsStyle(window.innerWidth);
-      responsiveBaseStyle.current = next;
-      currentStyle.current = next;
-      if (globeRef.current) {
-        globeRef.current.style.transform = `translate(${next.left - 50}vw, ${next.top - 50}vh) scale(${next.scale})`;
-      }
-    };
-
-    updateResponsiveStyle();
-    window.addEventListener("resize", updateResponsiveStyle);
-    return () => window.removeEventListener("resize", updateResponsiveStyle);
-  }, []);
-
-  // Smooth animation loop
-  useEffect(() => {
-    let targetStyle = responsiveBaseStyle.current;
-    let targetOpacity = 0.85;
-    let targetAngle = -24;
-    let running = true;
-    let lastActiveSection = -1;
-
     const updateTarget = () => {
       const containerRect = containerRef.current?.getBoundingClientRect();
       const containerHeight = containerRect?.height ?? document.documentElement.scrollHeight;
@@ -174,83 +131,14 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
 
       const maxIndex = Math.max(sections.length - 1, 1);
       const sectionProgress = progress * maxIndex;
-      const fromIndex = Math.floor(sectionProgress);
-      const toIndex = Math.min(fromIndex + 1, maxIndex);
-      const blend = sectionProgress - fromIndex;
-
-      const base = responsiveBaseStyle.current;
-      const isDesktop = window.innerWidth >= 1024;
-
-      if (isDesktop) {
-        // Desktop: scissors sits on one side per section, alternates on section change
-        const leftPos = 18;
-        const rightPos = 82;
-        const fromSide = fromIndex % 2 === 0 ? rightPos : leftPos;
-        const toSide = toIndex % 2 === 0 ? rightPos : leftPos;
-        const currentLeft = lerp(fromSide, toSide, blend);
-        targetStyle = {
-          top: base.top,
-          left: currentLeft,
-          scale: base.scale,
-        };
-      } else {
-        const bobY = Math.sin(progress * Math.PI * 2) * 1.2;
-        const bobX = Math.cos(progress * Math.PI * 2) * 0.9;
-        const pulse = Math.sin(progress * Math.PI) * 0.04;
-        targetStyle = {
-          top: base.top + bobY,
-          left: base.left + bobX,
-          scale: base.scale + pulse,
-        };
-      }
-
-      const fromAngle = fromIndex % 2 === 0 ? -24 : 24;
-      const toAngle = toIndex % 2 === 0 ? -24 : 24;
-      const swingDirection = toAngle >= fromAngle ? 1 : -1;
-      const swing = Math.sin(blend * Math.PI) * 8 * swingDirection;
-      targetAngle = lerp(fromAngle, toAngle, blend) + swing;
-      if (Math.abs(targetAngle - scissorsAngleRef.current) > 0.6) {
-        scissorsAngleRef.current = targetAngle;
-        setScissorsAngle(targetAngle);
-      }
-
-      targetOpacity = progress > 0.75
-        ? lerp(0.85, 0.4, (progress - 0.75) / 0.25)
-        : 0.85;
-
       const nextActiveSection = Math.round(sectionProgress);
-      if (nextActiveSection !== lastActiveSection) {
-        lastActiveSection = nextActiveSection;
-        setActiveSection(nextActiveSection);
-      }
-    };
-
-    const animate = () => {
-      if (!running) return;
-      const smoothing = 0.06;
-      currentStyle.current = {
-        top: lerp(currentStyle.current.top, targetStyle.top, smoothing),
-        left: lerp(currentStyle.current.left, targetStyle.left, smoothing),
-        scale: lerp(currentStyle.current.scale, targetStyle.scale, smoothing),
-      };
-
-      if (globeRef.current) {
-        globeRef.current.style.transform = `translate(${currentStyle.current.left - 50}vw, ${currentStyle.current.top - 50}vh) scale(${currentStyle.current.scale})`;
-        globeRef.current.style.opacity = `${targetOpacity}`;
-      }
-
-      animationFrameId.current = requestAnimationFrame(animate);
+      setActiveSection((previous) => (previous === nextActiveSection ? previous : nextActiveSection));
     };
 
     window.addEventListener("scroll", updateTarget, { passive: true });
     updateTarget();
-    animate();
 
     return () => {
-      running = false;
-      if (animationFrameId.current !== null) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
       window.removeEventListener("scroll", updateTarget);
     };
   }, [sections.length]);
@@ -321,15 +209,6 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
         
         {/* Enhanced navigation line - Responsive */}
         <div className="absolute left-1/2 top-0 bottom-0 w-0.5 lg:w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent -translate-x-1/2 -z-10" />
-      </div>
-
-      {/* Ultra-smooth scissors with full-viewport canvas */}
-      <div
-        ref={globeRef}
-        className="fixed inset-0 z-30 pointer-events-none overflow-visible will-change-transform"
-        style={{ opacity: 0.85 }}
-      >
-        <Globe className="w-full h-full" angle={scissorsAngle} />
       </div>
 
       <div className="fixed inset-0 z-[15] pointer-events-none bg-black/8" />
@@ -405,7 +284,7 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
             ) : section.location && section.contactActions ? (
               <div className="space-y-6 sm:space-y-8">
                 <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
-                  <div className="rounded-xl sm:rounded-2xl border border-border/55 bg-background/35 p-4 sm:p-5 backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+                  <div className="rounded-xl sm:rounded-2xl border border-border/55 bg-background/35 p-4 sm:p-5 text-left backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
                     <h3 className="text-lg sm:text-xl font-semibold text-white">{section.location.title}</h3>
                     <p className="mt-2 text-sm sm:text-base text-white/80">{section.location.address}</p>
                     <div className="mt-4 overflow-hidden rounded-lg sm:rounded-xl border border-border/50 bg-black/30">
@@ -428,7 +307,7 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
                     </a>
                   </div>
 
-                  <div className="rounded-xl sm:rounded-2xl border border-border/55 bg-background/35 p-4 sm:p-5 backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+                  <div className="rounded-xl sm:rounded-2xl border border-border/55 bg-background/35 p-4 sm:p-5 text-left backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
                     <h3 className="text-lg sm:text-xl font-semibold text-white">{resolvedUiText.contactTitle}</h3>
                     {section.contactIntro && (
                       <p className="mt-2 text-sm text-white/72">{section.contactIntro}</p>
@@ -441,13 +320,13 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
                           target={item.external ? "_blank" : undefined}
                           rel={item.external ? "noopener noreferrer" : undefined}
                           aria-label={`${item.label}: ${item.value}`}
-                          className="group flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-lg border border-border/50 bg-card/45 px-3.5 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          className="group flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-lg border border-border/50 bg-card/45 px-3.5 py-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
                         >
                           <div className="flex min-w-0 items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-md border border-primary/35 bg-primary/10">
                               <ContactActionIcon id={item.id} />
                             </div>
-                            <div className="min-w-0">
+                            <div className="min-w-0 text-left">
                               <p className="text-xs uppercase tracking-[0.14em] text-white/58">{item.label}</p>
                               <p className="truncate text-sm sm:text-[15px] text-white/90">{item.value}</p>
                             </div>

@@ -14,7 +14,7 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: "Guaixperience",
-  description: "An immersive globe scroll experience",
+  description: "An immersive scroll experience",
 };
 
 export default function RootLayout({
