@@ -13,7 +13,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Guaixperience",
+  title: "Example Page",
   description: "An immersive scroll experience",
 };
 

@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { CircularTestimonials } from "@/components/ui/circular-testimonials";
 import { TESTIMONIALS_BY_LANGUAGE, type TestimonialItem } from "@/data/testimonials";
 import { cn } from "@/lib/utils";
-import guaiLogo from "../../../images/ChatGPT Image 24 feb 2026, 11_05_08 p.m..png";
 
 // Reusable ScrollGlobe component following shadcn/ui patterns
 interface ScrollGlobeProps {
@@ -231,30 +229,19 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
             "rounded-2xl sm:rounded-3xl bg-white/[0.04] backdrop-blur-md px-4 sm:px-7 md:px-8 lg:px-10 py-5 sm:py-6 lg:py-7 shadow-[0_10px_30px_rgba(0,0,0,0.12)]",
             "opacity-100 translate-y-0"
           )}>
-            {index === 0 ? (
-              <div className="mb-1 sm:mb-8 flex justify-center">
-                <Image
-                  src={guaiLogo}
-                  alt="GUAI XPERIENCE logo"
-                  priority
-                  className="h-auto w-[340px] sm:w-[420px] lg:w-[480px] drop-shadow-[0_6px_16px_rgba(0,0,0,0.28)]"
-                />
-              </div>
-            ) : (
-              <h1 className={cn(
-                "w-full text-center font-[family-name:var(--font-montserrat)] font-bold mb-6 sm:mb-6 leading-[1.1] tracking-tight text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)]",
-                "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl"
-              )}>
-                {section.subtitle ? (
-                  <div className="space-y-1 sm:space-y-2">
-                    <div className="text-white">{section.title}</div>
-                    <div className="text-white/75 text-[0.6em] sm:text-[0.7em] font-medium tracking-wider">{section.subtitle}</div>
-                  </div>
-                ) : (
-                  <span className="text-white">{section.title}</span>
-                )}
-              </h1>
-            )}
+            <h1 className={cn(
+              "w-full text-center font-[family-name:var(--font-montserrat)] font-bold mb-6 sm:mb-6 leading-[1.1] tracking-tight text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)]",
+              "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl"
+            )}>
+              {section.subtitle ? (
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="text-white">{section.title}</div>
+                  <div className="text-white/75 text-[0.6em] sm:text-[0.7em] font-medium tracking-wider">{section.subtitle}</div>
+                </div>
+              ) : (
+                <span className="text-white">{section.title}</span>
+              )}
+            </h1>
             {section.testimonials ? (
               <div className="flex justify-center">
                 <div className="w-full max-w-[1456px] rounded-2xl border border-border/55 bg-background/35 p-3 sm:p-6 lg:p-10 backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
@@ -290,7 +277,7 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
                     <div className="mt-4 overflow-hidden rounded-lg sm:rounded-xl border border-border/50 bg-black/30">
                       <iframe
                         src={section.location.mapEmbedUrl}
-                        title="GUAI XPERIENCE location map"
+                        title="Example Page location map"
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
                         className="h-44 w-full sm:h-52"
@@ -301,7 +288,7 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-4 inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/35"
-                      aria-label="Open GUAI XPERIENCE in Google Maps"
+                      aria-label="Open Example Page in Google Maps"
                     >
                       {resolvedUiText.openInMaps}
                     </a>
@@ -435,8 +422,6 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
 
 type Language = "en" | "es" | "ca";
 
-const BOOKING_URL = "https://connect.shore.com/bookings/guai-xperience-70005040-06e6-4d38-9633-6d5187dc93d5/services?locale=es";
-
 // Demo component showcasing the ScrollGlobe
 export default function GlobeScrollDemo() {
   const [language, setLanguage] = useState<Language>("en");
@@ -456,6 +441,10 @@ export default function GlobeScrollDemo() {
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
+
+  const scrollToBooking = () => {
+    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -482,18 +471,18 @@ export default function GlobeScrollDemo() {
     {
       id: "hero",
       badge: "Welcome",
-      title: "Welcome to GUAI XPERIENCE",
+      title: "Welcome to Example Page",
       description: "This is more than a haircut. It is a sensory barbershop ritual where style, self-care, and calm come together so you can slow down, reconnect, and leave renewed.",
       align: "left",
       actions: [
-        { label: "Book Now", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") },
+        { label: "Book Now", variant: "primary", onClick: scrollToBooking },
         { label: "Learn More", variant: "secondary", onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
       ],
     },
     {
       id: "experience",
       badge: "Experience",
-      title: "The GUAI Experience",
+      title: "The Example Page Experience",
       description: "Every appointment is designed around you. We combine precise technique, thoughtful conversation, and a relaxing atmosphere inspired by natural textures, aromas, and rhythm.",
       align: "left",
       features: [
@@ -510,15 +499,15 @@ export default function GlobeScrollDemo() {
       align: "left",
       location: {
         title: "Find Us",
-        address: "C. Llull 82, Barcelona",
-        mapEmbedUrl: "https://www.google.com/maps?q=C.%20Llull%2082%2C%20Barcelona&output=embed",
-        mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona",
+        address: "Sagrada Familia, Barcelona",
+        mapEmbedUrl: "https://www.google.com/maps?q=Sagrada+Familia,+Barcelona&output=embed",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Sagrada+Familia,+Barcelona",
       },
       contactIntro: "Questions or bookings? Reach us directly.",
       contactActions: [
-        { id: "whatsapp", label: "WhatsApp", value: "654 823 296", href: "https://wa.me/34654823296", external: true },
-        { id: "call", label: "Call", value: "931 286 182", href: "tel:+34931286182" },
-        { id: "instagram", label: "Instagram", value: "@guaixperience", href: "https://www.instagram.com/guaixperience", external: true },
+        { id: "whatsapp", label: "WhatsApp", value: "1234 567 890", href: "https://wa.me/341234567890", external: true },
+        { id: "call", label: "Call", value: "1234 098 765", href: "tel:+341234098765" },
+        { id: "instagram", label: "Instagram", value: "@EXAMPLEPAGE", href: "https://www.instagram.com/examplepage", external: true },
       ],
     },
     {
@@ -527,7 +516,7 @@ export default function GlobeScrollDemo() {
       title: "Book Your Appointment",
       description: "Choose your service and reserve your spot online in just a few steps. Quick, clear, and ready when you are.",
       align: "center",
-      actions: [{ label: "Book Now", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") }],
+      actions: [{ label: "Book Now", variant: "primary", onClick: scrollToBooking }],
       helperText: "Fast and secure online booking",
     },
     {
@@ -546,17 +535,17 @@ export default function GlobeScrollDemo() {
       {
         ...baseSections[0],
         badge: "Bienvenida",
-        title: "Bienvenido a GUAI XPERIENCE",
+        title: "Bienvenido a Example Page",
         description: "Esto es mas que un corte. Es un ritual de barberia sensorial donde estilo, autocuidado y calma se unen para que bajes el ritmo, reconectes y salgas renovado.",
         actions: [
-          { label: "Reservar", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") },
+          { label: "Reservar", variant: "primary", onClick: scrollToBooking },
           { label: "Saber mas", variant: "secondary", onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
         ],
       },
       {
         ...baseSections[1],
         badge: "Experiencia",
-        title: "La Experiencia GUAI",
+        title: "La Experiencia Example Page",
         description: "Cada cita esta disenada alrededor de ti. Combinamos tecnica precisa, conversacion cuidada y un ambiente relajante inspirado en texturas, aromas y ritmo natural.",
         features: [
           { title: "Atencion personalizada", description: "Adaptamos cada corte, arreglo de barba y acabado a tu estilo, rutina y personalidad." },
@@ -570,15 +559,15 @@ export default function GlobeScrollDemo() {
         title: "Visitanos en Barcelona",
         location: {
           title: "Donde estamos",
-          address: "C. Llull 82, Barcelona",
-          mapEmbedUrl: "https://www.google.com/maps?q=C.%20Llull%2082%2C%20Barcelona&output=embed",
-          mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona",
+          address: "Sagrada Familia, Barcelona",
+          mapEmbedUrl: "https://www.google.com/maps?q=Sagrada+Familia,+Barcelona&output=embed",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Sagrada+Familia,+Barcelona",
         },
         contactIntro: "Dudas o reservas? Escribenos directamente.",
         contactActions: [
-          { id: "whatsapp", label: "WhatsApp", value: "654 823 296", href: "https://wa.me/34654823296", external: true },
-          { id: "call", label: "Llamar", value: "931 286 182", href: "tel:+34931286182" },
-          { id: "instagram", label: "Instagram", value: "@guaixperience", href: "https://www.instagram.com/guaixperience", external: true },
+          { id: "whatsapp", label: "WhatsApp", value: "1234 567 890", href: "https://wa.me/341234567890", external: true },
+          { id: "call", label: "Llamar", value: "1234 098 765", href: "tel:+341234098765" },
+          { id: "instagram", label: "Instagram", value: "@EXAMPLEPAGE", href: "https://www.instagram.com/examplepage", external: true },
         ],
       },
       {
@@ -586,7 +575,7 @@ export default function GlobeScrollDemo() {
         badge: "Reserva",
         title: "Reserva tu cita",
         description: "Elige tu servicio y reserva online en pocos pasos. Rapido, claro y listo cuando tu quieras.",
-        actions: [{ label: "Reservar ahora", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") }],
+        actions: [{ label: "Reservar ahora", variant: "primary", onClick: scrollToBooking }],
         helperText: "Reserva online rapida y segura",
       },
       {
@@ -600,17 +589,17 @@ export default function GlobeScrollDemo() {
       {
         ...baseSections[0],
         badge: "Benvinguda",
-        title: "Benvingut a GUAI XPERIENCE",
+        title: "Benvingut a Example Page",
         description: "Aixo es mes que un tall de cabell. Es un ritual de barberia sensorial on estil, autocura i calma s'uneixen perque puguis baixar el ritme, reconnectar i sortir renovat.",
         actions: [
-          { label: "Reserva", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") },
+          { label: "Reserva", variant: "primary", onClick: scrollToBooking },
           { label: "Saber-ne mes", variant: "secondary", onClick: () => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
         ],
       },
       {
         ...baseSections[1],
         badge: "Experiencia",
-        title: "L'Experiencia GUAI",
+        title: "L'Experiencia Example Page",
         description: "Cada cita esta dissenyada al teu voltant. Combinem tecnica precisa, conversa cuidada i una atmosfera relaxant inspirada en textures, aromes i ritme natural.",
         features: [
           { title: "Atencio personalitzada", description: "Adaptem cada tall, servei de barba i acabat al teu estil, rutina i personalitat." },
@@ -624,15 +613,15 @@ export default function GlobeScrollDemo() {
         title: "Visita'ns a Barcelona",
         location: {
           title: "On som",
-          address: "C. Llull 82, Barcelona",
-          mapEmbedUrl: "https://www.google.com/maps?q=C.%20Llull%2082%2C%20Barcelona&output=embed",
-          mapsUrl: "https://www.google.com/maps/search/?api=1&query=C.+Llull+82,+Barcelona",
+          address: "Sagrada Familia, Barcelona",
+          mapEmbedUrl: "https://www.google.com/maps?q=Sagrada+Familia,+Barcelona&output=embed",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Sagrada+Familia,+Barcelona",
         },
         contactIntro: "Dubtes o reserves? Escriu-nos directament.",
         contactActions: [
-          { id: "whatsapp", label: "WhatsApp", value: "654 823 296", href: "https://wa.me/34654823296", external: true },
-          { id: "call", label: "Trucar", value: "931 286 182", href: "tel:+34931286182" },
-          { id: "instagram", label: "Instagram", value: "@guaixperience", href: "https://www.instagram.com/guaixperience", external: true },
+          { id: "whatsapp", label: "WhatsApp", value: "1234 567 890", href: "https://wa.me/341234567890", external: true },
+          { id: "call", label: "Trucar", value: "1234 098 765", href: "tel:+341234098765" },
+          { id: "instagram", label: "Instagram", value: "@EXAMPLEPAGE", href: "https://www.instagram.com/examplepage", external: true },
         ],
       },
       {
@@ -640,7 +629,7 @@ export default function GlobeScrollDemo() {
         badge: "Reserva",
         title: "Reserva la teva cita",
         description: "Tria el teu servei i reserva online en pocs passos. Rapid, clar i preparat quan tu vulguis.",
-        actions: [{ label: "Reserva ara", variant: "primary", onClick: () => window.open(BOOKING_URL, "_blank", "noopener,noreferrer") }],
+        actions: [{ label: "Reserva ara", variant: "primary", onClick: scrollToBooking }],
         helperText: "Reserva online rapida i segura",
       },
       {

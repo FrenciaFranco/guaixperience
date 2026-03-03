@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import type { ReactNode } from "react";
-import cardFrontBackground from "./assets/card-front-bg.png";
-import cardBackBackground from "./assets/card-back-bg.png";
-import guaiLogo from "../../../images/ChatGPT Image 24 feb 2026, 11_05_08 p.m..png";
 import qrCode from "../../../images/qr-code.png";
 import "./businesscards.css";
 
 export const metadata: Metadata = {
-  title: "Business Cards | Guaixperience",
-  description: "Business card mockups for GUAI XPERIENCE.",
+  title: "Business Cards | Example Page",
+  description: "Business card mockups for Example Page.",
 };
 
 function WhatsAppIcon() {
@@ -61,16 +58,17 @@ type ContactTileProps = {
   label: string;
   value: string;
   icon: ReactNode;
+  hideLabel?: boolean;
 };
 
-function ContactTile({ label, value, icon }: ContactTileProps) {
+function ContactTile({ label, value, icon, hideLabel = false }: ContactTileProps) {
   return (
     <div className="flex items-center gap-2.5 px-1 py-1">
       <div className="flex min-w-0 items-center gap-2.5 text-left">
         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/6">{icon}</div>
         <div className="min-w-0 text-left">
-          <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-white">{label}</p>
-          <p className="text-[12px] font-semibold leading-tight text-white sm:text-[13px]">{value}</p>
+          {!hideLabel ? <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-white [text-shadow:0_1px_0_rgba(0,0,0,0.9),0_2px_4px_rgba(0,0,0,0.78)]">{label}</p> : null}
+          <p className="text-[12px] font-semibold leading-tight text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.9),0_2px_4px_rgba(0,0,0,0.8)] sm:text-[13px]">{value}</p>
         </div>
       </div>
     </div>
@@ -80,13 +78,7 @@ function ContactTile({ label, value, icon }: ContactTileProps) {
 export default function BusinessCardsPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
-      <Image
-        src={cardFrontBackground}
-        alt="Mask nature background"
-        fill
-        priority
-        className="object-cover object-center blur-[7px] brightness-[0.42] saturate-110"
-      />
+      <div className="businesscards-page-bg absolute inset-0 bg-[radial-gradient(120%_90%_at_8%_10%,rgba(39,88,79,0.34),rgba(7,12,12,0.92)_55%,rgba(5,6,7,0.98)_100%)]" />
       <div className="absolute inset-0 bg-black/40" />
 
       <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-4 py-6 sm:px-6 lg:px-8">
@@ -94,25 +86,19 @@ export default function BusinessCardsPage() {
           <h1 className="mt-1 font-[family-name:var(--font-montserrat)] text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Business Card Concepts
           </h1>
-          <p className="mt-1 text-sm text-emerald-100/80">guaixperience.com</p>
+          <p className="mt-1 text-sm text-emerald-100/80">examplepage.com</p>
         </div>
 
         <div className="businesscards-grid grid items-center justify-center gap-4 lg:grid-cols-2">
           <article
             className="businesscard relative mx-auto w-full overflow-hidden rounded-[24px] border border-transparent"
           >
-            <Image
-              src={cardFrontBackground}
-              alt="Mask card artwork left"
-              fill
-              className="object-cover"
-              style={{ objectPosition: "34% center" }}
-            />
+            <div className="businesscard-artwork absolute inset-0 bg-[linear-gradient(118deg,rgba(15,26,22,0.9)_0%,rgba(16,44,36,0.72)_33%,rgba(8,14,13,0.94)_70%,rgba(5,8,8,0.98)_100%)]" />
             <div className="businesscard-safe-area relative flex h-full flex-col justify-end overflow-hidden rounded-2xl border border-transparent bg-transparent px-3.5 pb-2.5 pt-3.5 sm:px-4 sm:pb-3 sm:pt-4">
               <div className="pt-2 text-left">
-                <Image src={guaiLogo} alt="GUAI XPERIENCE logo" className="-ml-2 h-auto w-[205px] max-w-full drop-shadow-[0_8px_22px_rgba(0,0,0,0.55)] sm:-ml-3 sm:w-[230px]" />
+                <p className="text-[19px] font-extrabold uppercase tracking-[0.14em] text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.92),0_2px_4px_rgba(0,0,0,0.82)] sm:text-[22px]">EXAMPLE PAGE</p>
                 <div className="mt-2 h-px w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                <p className="mt-2 text-[10px] uppercase tracking-[0.13em] text-white/78">BARBERSHOP DE AUTOR</p>
+                <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.92),0_2px_4px_rgba(0,0,0,0.82)]">BARBERSHOP DE AUTOR</p>
               </div>
             </div>
           </article>
@@ -120,38 +106,31 @@ export default function BusinessCardsPage() {
           <article
             className="businesscard relative mx-auto w-full overflow-hidden rounded-[24px] border border-transparent"
           >
-            <Image
-              src={cardBackBackground}
-              alt="Mask card artwork right"
-              fill
-              className="object-cover"
-              style={{ objectPosition: "66% center" }}
-            />
+            <div className="businesscard-artwork absolute inset-0 bg-[linear-gradient(120deg,rgba(12,19,22,0.9)_0%,rgba(18,28,33,0.82)_45%,rgba(7,10,12,0.98)_100%)]" />
             <div className="businesscard-safe-area relative flex h-full flex-col rounded-2xl border border-transparent bg-transparent p-2.5 font-[family-name:var(--font-inter)] sm:p-3">
-              <div className="grid h-full grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                <div className="justify-self-start self-end rounded-lg border border-white/28 bg-black/24 p-1 backdrop-blur-[1px] sm:p-1.5">
+              <div className="grid h-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                <div className="justify-self-start self-start rounded-lg border border-white/22 bg-[linear-gradient(145deg,rgba(18,28,34,0.34)_0%,rgba(18,28,34,0.22)_52%,rgba(18,28,34,0.3)_100%)] p-1 backdrop-blur-[1px] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.26)] sm:p-1.5">
                   <div className="space-y-0.5">
-                    <ContactTile label="WhatsApp" value="654 823 296" icon={<WhatsAppIcon />} />
+                    <ContactTile label="UBICACION" value="Sagrada Familia, Barcelona" icon={<LocationIcon />} hideLabel />
                     <div className="mx-1 h-px bg-white/25" />
-                    <ContactTile label="Call" value="931 286 182" icon={<PhoneIcon />} />
+                    <ContactTile label="WhatsApp" value="1234 567 890" icon={<WhatsAppIcon />} hideLabel />
                     <div className="mx-1 h-px bg-white/25" />
-                    <ContactTile label="Instagram" value="@guaixperience" icon={<InstagramIcon />} />
+                    <ContactTile label="TELEFONO" value="1234 098 765" icon={<PhoneIcon />} hideLabel />
                     <div className="mx-1 h-px bg-white/25" />
-                    <ContactTile label="Website" value="guaixperience.com" icon={<WebsiteIcon />} />
+                    <ContactTile label="Instagram" value="@EXAMPLEPAGE" icon={<InstagramIcon />} hideLabel />
                     <div className="mx-1 h-px bg-white/25" />
-                    <ContactTile label="Location" value="C. Llull 82 - Barcelona" icon={<LocationIcon />} />
+                    <ContactTile label="PAGINA" value="examplepage.com" icon={<WebsiteIcon />} hideLabel />
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-white/28 bg-black/24 p-1 backdrop-blur-[1px] sm:p-1.5">
-                  <div className="flex h-full flex-col items-center justify-center gap-0.5 text-center">
+                <div className="justify-self-end self-start rounded-lg border border-white/22 bg-[linear-gradient(145deg,rgba(18,28,34,0.34)_0%,rgba(18,28,34,0.22)_52%,rgba(18,28,34,0.3)_100%)] p-1 backdrop-blur-[1px] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.26)] sm:p-1.5">
+                  <div className="flex h-full flex-col items-center justify-start gap-2.5 px-1 pb-1 pt-1.5 text-center sm:gap-3 sm:pt-2">
                     <div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-white">Bookings</p>
-                      <p className="mt-0.5 text-[10px] font-medium leading-tight text-white/95">Scan to book your appointment</p>
+                      <p className="text-[12px] font-semibold leading-tight text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.9),0_2px_4px_rgba(0,0,0,0.8)] sm:text-[13px]">Reservas / Book Now!</p>
                     </div>
                     <div className="relative shrink-0 p-0">
                       <div className="pointer-events-none absolute inset-[-3px] -z-10 rounded-xl bg-emerald-300/22 blur-sm" />
-                      <Image src={qrCode} alt="Booking QR code" className="h-[4.2rem] w-[4.2rem] object-contain sm:h-[4.8rem] sm:w-[4.8rem]" />
+                      <Image src={qrCode} alt="Booking QR code" className="h-[5.25rem] w-[5.25rem] object-contain sm:h-[6rem] sm:w-[6rem]" />
                     </div>
                   </div>
                 </div>
