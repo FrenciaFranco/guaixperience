@@ -277,7 +277,7 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
                     <div className="mt-4 overflow-hidden rounded-lg sm:rounded-xl border border-border/50 bg-black/30">
                       <iframe
                         src={section.location.mapEmbedUrl}
-                        title="Example Page location map"
+                        title="GUAI Xperience location map"
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
                         className="h-44 w-full sm:h-52"
@@ -288,7 +288,7 @@ function ScrollGlobe({ sections, uiText, className }: ScrollGlobeProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-4 inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/35"
-                      aria-label="Open Example Page in Google Maps"
+                      aria-label="Open GUAI Xperience in Google Maps"
                     >
                       {resolvedUiText.openInMaps}
                     </a>
@@ -471,7 +471,7 @@ export default function GlobeScrollDemo() {
     {
       id: "hero",
       badge: "Welcome",
-      title: "Welcome to Example Page",
+      title: "Welcome to GUAI Xperience",
       description: "This is more than a haircut. It is a sensory barbershop ritual where style, self-care, and calm come together so you can slow down, reconnect, and leave renewed.",
       align: "left",
       actions: [
@@ -482,7 +482,7 @@ export default function GlobeScrollDemo() {
     {
       id: "experience",
       badge: "Experience",
-      title: "The Example Page Experience",
+      title: "The GUAI Xperience Experience",
       description: "Every appointment is designed around you. We combine precise technique, thoughtful conversation, and a relaxing atmosphere inspired by natural textures, aromas, and rhythm.",
       align: "left",
       features: [
@@ -535,7 +535,7 @@ export default function GlobeScrollDemo() {
       {
         ...baseSections[0],
         badge: "Bienvenida",
-        title: "Bienvenido a Example Page",
+        title: "Bienvenido a GUAI Xperience",
         description: "Esto es mas que un corte. Es un ritual de barberia sensorial donde estilo, autocuidado y calma se unen para que bajes el ritmo, reconectes y salgas renovado.",
         actions: [
           { label: "Reservar", variant: "primary", onClick: scrollToBooking },
@@ -545,7 +545,7 @@ export default function GlobeScrollDemo() {
       {
         ...baseSections[1],
         badge: "Experiencia",
-        title: "La Experiencia Example Page",
+        title: "La Experiencia GUAI Xperience",
         description: "Cada cita esta disenada alrededor de ti. Combinamos tecnica precisa, conversacion cuidada y un ambiente relajante inspirado en texturas, aromas y ritmo natural.",
         features: [
           { title: "Atencion personalizada", description: "Adaptamos cada corte, arreglo de barba y acabado a tu estilo, rutina y personalidad." },
@@ -589,7 +589,7 @@ export default function GlobeScrollDemo() {
       {
         ...baseSections[0],
         badge: "Benvinguda",
-        title: "Benvingut a Example Page",
+        title: "Benvingut a GUAI Xperience",
         description: "Aixo es mes que un tall de cabell. Es un ritual de barberia sensorial on estil, autocura i calma s'uneixen perque puguis baixar el ritme, reconnectar i sortir renovat.",
         actions: [
           { label: "Reserva", variant: "primary", onClick: scrollToBooking },
@@ -599,7 +599,7 @@ export default function GlobeScrollDemo() {
       {
         ...baseSections[1],
         badge: "Experiencia",
-        title: "L'Experiencia Example Page",
+        title: "L'Experiencia GUAI Xperience",
         description: "Cada cita esta dissenyada al teu voltant. Combinem tecnica precisa, conversa cuidada i una atmosfera relaxant inspirada en textures, aromes i ritme natural.",
         features: [
           { title: "Atencio personalitzada", description: "Adaptem cada tall, servei de barba i acabat al teu estil, rutina i personalitat." },

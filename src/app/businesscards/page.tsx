@@ -5,8 +5,8 @@ import qrCode from "../../../images/qr-code.png";
 import "./businesscards.css";
 
 export const metadata: Metadata = {
-  title: "Business Cards | Example Page",
-  description: "Business card mockups for Example Page.",
+  title: "Business Cards | GUAI Xperience",
+  description: "Business card mockups for GUAI Xperience.",
 };
 
 function WhatsAppIcon() {
@@ -96,7 +96,7 @@ export default function BusinessCardsPage() {
             <div className="businesscard-artwork absolute inset-0 bg-[linear-gradient(118deg,rgba(15,26,22,0.9)_0%,rgba(16,44,36,0.72)_33%,rgba(8,14,13,0.94)_70%,rgba(5,8,8,0.98)_100%)]" />
             <div className="businesscard-safe-area relative flex h-full flex-col justify-end overflow-hidden rounded-2xl border border-transparent bg-transparent px-3.5 pb-2.5 pt-3.5 sm:px-4 sm:pb-3 sm:pt-4">
               <div className="pt-2 text-left">
-                <p className="text-[19px] font-extrabold uppercase tracking-[0.14em] text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.92),0_2px_4px_rgba(0,0,0,0.82)] sm:text-[22px]">EXAMPLE PAGE</p>
+                <p className="text-[19px] font-extrabold uppercase tracking-[0.14em] text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.92),0_2px_4px_rgba(0,0,0,0.82)] sm:text-[22px]">GUAI XPERIENCE</p>
                 <div className="mt-2 h-px w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                 <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-50 [text-shadow:0_1px_0_rgba(0,0,0,0.92),0_2px_4px_rgba(0,0,0,0.82)]">BARBERSHOP DE AUTOR</p>
               </div>
